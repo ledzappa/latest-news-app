@@ -5,8 +5,10 @@ const axios = require("axios");
 
 const App = () => {
   const [news, setNews] = useState(null);
-  const [filter, setFilter] = useState("alla");
+  const [filter, setFilter] = useState("all");
   const [filters, setFilters] = useState([]);
+  const [highlighted, setHighlighted] = useState([]);
+  // const highlighted = ["trump", "corona"];
 
   useEffect(() => {
     const getNews = async () => {
@@ -16,38 +18,65 @@ const App = () => {
         result.data.reduce(
           (prev, cur) =>
             prev.indexOf(cur.source) === -1 ? [...prev, cur.source] : prev,
-          ["alla"]
+          ["all"]
         )
       );
     };
 
+    // initial get
     getNews();
+
+    // refresh every minute
+    setInterval(() => getNews(), 60000);
   }, []);
+
+  const hasKeyword = (title) => {
+    return highlighted.some((v) => title.toLowerCase().includes(v)) || false;
+  };
+
+  const handleChange = (event) => {
+    const val = event.target.value;
+    setHighlighted(val.length !== 0 ? val.split(",") : []);
+  };
 
   return (
     <div className="App">
       {filters.map((filter) => (
         <button class="btn btn-primary" onClick={() => setFilter(filter)}>
-          {filter}
+          {filter ? filter : "Alla"}
         </button>
       ))}
-      <table class="table table-striped text-left">
+      <input
+        className="form-control"
+        type="text"
+        value={highlighted.join(",")}
+        onChange={(e) => handleChange(e)}
+      />
+      <table className="table table-striped text-left">
         <thead></thead>
         <tbody>
           {news
-            ?.filter((item) => filter === "alla" || item.source === filter)
+            ?.filter((item) => filter === "all" || item.source === filter)
             .map((item) => ({ ...item, pubDate: new Date(item.pubDate) }))
             .map((item) => ({
               ...item,
               formatedTime: `${item.pubDate.getHours()}:${item.pubDate.getMinutes()}`,
             }))
             .map((item) => (
-              <tr>
+              <tr
+                className={
+                  hasKeyword(item.title) ? "highlight" : "not-highlight"
+                }
+              >
                 <td>{item.source}</td>
                 <td>{item.formatedTime}</td>
                 <td>
-                  <h4>{item.title}</h4>
-                  <p dangerouslySetInnerHTML={{ __html: item.content }}></p>
+                  <h4>
+                    <a target="_blank" href={item.link}>
+                      {item.title}
+                    </a>
+                  </h4>
+                  {/* <p dangerouslySetInnerHTML={{ __html: item.content }}></p> */}
                 </td>
               </tr>
             ))}

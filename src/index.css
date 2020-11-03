@@ -1,0 +1,8 @@
+tr.highlight td {
+  background-color: #17a2b8 !important;
+}
+
+tr.highlight td,
+tr.highlight td a {
+  color: #fff !important;
+}
